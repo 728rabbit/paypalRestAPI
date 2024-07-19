@@ -258,7 +258,7 @@ class paypalRestAPI {
         return false;
     }
 
-    public function queryStatus($paymentId = '') {
+    public function transationStatus($paymentId = '') {
         $paymentId = 'PAYMENT_ID_TO_QUERY';
         if(!empty($paymentId) && $auth_info = $this->doAuth()) {
             $access_token = $auth_info['access_token'];
