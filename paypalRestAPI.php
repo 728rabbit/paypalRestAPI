@@ -181,10 +181,11 @@ class paypalRestAPI {
             curl_setopt($ch, CURLOPT_URL, $this->_end_point.'/payments/payment');
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            curl_setopt($ch, CURLOPT_HTTPHEADER, 
+            [
                 'Content-Type: application/json',
                 'Authorization: Bearer '.$access_token
-            ));
+            ]);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payment));
             
             $response = curl_exec($ch);
@@ -230,10 +231,11 @@ class paypalRestAPI {
             curl_setopt($ch, CURLOPT_URL, $this->_end_point.'/payments/payment/'.($_GET['paymentId']).'/execute');
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            curl_setopt($ch, CURLOPT_HTTPHEADER, 
+            [
                 'Content-Type: application/json',
                 'Authorization: Bearer '.$access_token
-            ));
+            ]);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['payer_id' => $_GET['PayerID']]));
             
             $response = curl_exec($ch);
@@ -256,6 +258,38 @@ class paypalRestAPI {
         return false;
     }
 
+    public function queryStatus($paymentId = '') {
+        $paymentId = 'PAYMENT_ID_TO_QUERY';
+        if(!empty($paymentId) && $auth_info = $this->doAuth()) {
+            $access_token = $auth_info['access_token'];
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $this->_end_point.'/payments/payment/'.$paymentId);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, 
+            [
+                'Content-Type: application/json',
+                'Authorization: Bearer '.$access_token
+            ]);
+            
+            $response = curl_exec($ch);
+            if (curl_errno($ch)) {
+                $this->_error_message = curl_error($ch);
+                return false;
+            }
+            else {
+                $response = json_decode($response, true);
+                if(!empty($response['error'])) {
+                    $this->_error_message = (!empty($response['error_description']))?$response['error_description']:'';
+                    return false;
+                }
+            }
+            curl_close($ch);
+            
+            return $response;
+        }
+        
+        return false;
+    }
 
     public function getErrorMessage() {
         return $this->_error_message;
