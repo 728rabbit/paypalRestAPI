@@ -32,6 +32,13 @@ $paypalRestAPI = new paypalRestAPI($clientId, $clientSecret, true);
 if($payment_result = $paypalRestAPI->doComplete($status)) {
     dump($payment_result);
 }
+
+// get transaction details
+$paypalRestAPI->transactionDetails($paymentId)
+
+// get transaction id
+$paypalRestAPI->transactionID($paymentId)  // $paymentId - optional
+
 */
 namespace App\Libs;
 
@@ -51,6 +58,8 @@ class paypalRestAPI {
     protected $_return_url = '';
     protected $_cancel_url = '';
     protected $_end_point = 'https://api.paypal.com/v1';
+
+    protected $_transaction_id = '';
 
     public function __construct($clientId, $clientSecret, $sandboxMode = false) {    
         $this->_clientId = $clientId;
@@ -252,14 +261,22 @@ class paypalRestAPI {
             }
             curl_close($ch);
             
+            $this->_transaction_id = '';
+            $this->_error_message = '';
+            if(!empty($response) && !empty($response['state']) && strtolower($response['state']) == 'approved'){
+                $this->_transaction_id = $response['transactions'][0]['related_resources'][0]['sale']['id'];
+            }
+            else if(!empty($response) && !empty($response['message'])) {
+                $this->_error_message = $response['message'];
+            }
+            
             return $response;
         }
         
         return false;
     }
 
-    public function transationStatus($paymentId = '') {
-        $paymentId = 'PAYMENT_ID_TO_QUERY';
+    public function transactionDetails($paymentId = '') {
         if(!empty($paymentId) && $auth_info = $this->doAuth()) {
             $access_token = $auth_info['access_token'];
             $ch = curl_init();
@@ -285,10 +302,26 @@ class paypalRestAPI {
             }
             curl_close($ch);
             
+            $this->_transaction_id = '';
+            $this->_error_message = '';
+            if(!empty($response) && !empty($response['state']) && strtolower($response['state']) == 'approved'){
+                $this->_transaction_id = $response['transactions'][0]['related_resources'][0]['sale']['id'];
+            }
+            else if(!empty($response) && !empty($response['message'])) {
+                $this->_error_message = $response['message'];
+            }
+            
             return $response;
         }
         
         return false;
+    }
+    
+    public function transactionID($paymentId = '') {
+        if(!empty($paymentId)) {
+            $this->transactionDetails($paymentId);
+        }
+        return $this->_transaction_id;
     }
 
     public function getErrorMessage() {
