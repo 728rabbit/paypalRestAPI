@@ -29,7 +29,7 @@ if(!empty($paypal_checkout)) {
 
 // feedback
 $paypalRestAPI = new paypalRestAPI($clientId, $clientSecret, true);
-if($payment_result = $paypalRestAPI->doConfirm($status)) {
+if($payment_result = $paypalRestAPI->doComplete($status)) {
     dump($payment_result);
 }
 */
@@ -224,7 +224,7 @@ class paypalRestAPI {
         return false;
     }
     
-    public function doConfirm($status = '') {
+    public function doComplete($status = '') {
         if (strtolower($status) == 'success' && $auth_info = $this->doAuth()) {
             $access_token = $auth_info['access_token'];
             $ch = curl_init();
